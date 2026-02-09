@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Tariff Calculator | KlearNow</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>🇺🇸 US Tariff Calculator</h1>
+            <span class="brand">KlearNow</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Dashboard Cards -->
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-label">Total Tariff Programs</div>
+                <div class="stat-value">20</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">HTS Codes Covered</div>
+                <div class="stat-value">79,338</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Overlays</div>
+                <div class="stat-value">16,189</div>
+            </div>
+            <div class="stat-card status-live">
+                <div class="stat-label">Status</div>
+                <div class="stat-value">● LIVE</div>
+            </div>
+        </div>
+
+        <!-- Calculator Card -->
+        <div class="card">
+            <h2>Calculate Duty</h2>
+            <form id="calculator-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="hts-code">HTS Code</label>
+                        <input type="text" id="hts-code" placeholder="e.g., 8708.80.65.90" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="country">Country of Origin</label>
+                        <select id="country" required>
+                            <option value="">Select Country</option>
+                            <option value="CN">China (CN)</option>
+                            <option value="JP">Japan (JP)</option>
+                            <option value="CA">Canada (CA)</option>
+                            <option value="MX">Mexico (MX)</option>
+                            <option value="DE">Germany (DE)</option>
+                            <option value="KR">South Korea (KR)</option>
+                            <option value="IT">Italy (IT)</option>
+                            <option value="FR">France (FR)</option>
+                            <option value="GB">United Kingdom (GB)</option>
+                            <option value="BR">Brazil (BR)</option>
+                            <option value="IN">India (IN)</option>
+                            <option value="VN">Vietnam (VN)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-date">Entry Date</label>
+                        <input type="date" id="entry-date" value="2025-02-01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="value">Value (USD)</label>
+                        <input type="number" id="value" placeholder="10000" step="0.01" required>
+                    </div>
+
+                    <!-- Material Content Section (Hidden by default) -->
+                    <div id="material-content-section" style="display: none;">
+                        <div class="form-group" id="aluminum-slider-container">
+                            <label for="aluminum-percent">Aluminum Content (%)</label>
+                            <input type="range" id="aluminum-percent" min="0" max="100" value="0" step="1">
+                            <div class="range-value"><span id="aluminum-value">0</span>%</div>
+                        </div>
+
+                        <div class="form-group" id="steel-slider-container">
+                            <label for="steel-percent">Steel Content (%)</label>
+                            <input type="range" id="steel-percent" min="0" max="100" value="0" step="1">
+                            <div class="range-value"><span id="steel-value">0</span>%</div>
+                        </div>
+
+                        <div class="form-group" id="copper-slider-container">
+                            <label for="copper-percent">Copper Content (%)</label>
+                            <input type="range" id="copper-percent" min="0" max="100" value="0" step="1">
+                            <div class="range-value"><span id="copper-value">0</span>%</div>
+                        </div>
+
+                        <div id="section232-note" style="display: none; color: #f59e0b; font-size: 14px; margin-top: -10px; margin-bottom: 15px; padding: 10px; background: #fffbeb; border-radius: 6px;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mode">Transportation Mode</label>
+                        <select id="mode">
+                            <option value="ocean">Ocean</option>
+                            <option value="air">Air</option>
+                            <option value="truck">Truck</option>
+                            <option value="rail">Rail</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Calculate Duty</button>
+            </form>
+        </div>
+
+        <!-- Results Card (Hidden by default) -->
+        <div id="results-card" class="card results-card" style="display: none;">
+            <h2>Calculation Results</h2>
+
+            <div class="result-summary">
+                <div class="result-item">
+                    <span class="result-label">Duty Rate:</span>
+                    <span class="result-value" id="duty-rate">0.00%</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Total Duty:</span>
+                    <span class="result-value highlight" id="total-duty">$0.00</span>
+                </div>
+            </div>
+
+            <div class="breakdown">
+                <h3>Breakdown</h3>
+                <div id="breakdown-items"></div>
+            </div>
+
+            <div class="landed-cost">
+                <span class="result-label">Landed Cost:</span>
+                <span class="result-value" id="landed-cost">$0.00</span>
+            </div>
+
+            <div id="confidence-badge" class="confidence-badge">
+                <span>Confidence: <strong id="confidence-value">100%</strong></span>
+            </div>
+
+            <div id="notes-section" style="display: none;">
+                <h3>Notes</h3>
+                <ul id="notes-list"></ul>
+            </div>
+        </div>
+
+        <!-- Test Case Button -->
+        <div class="test-case-section">
+            <button id="test-case-btn" class="btn-secondary">Load Test Case (HTS 8708.80.65.90)</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>US Tariff Calculator v1.0 | Data as of January 2025 | Built by KlearNow</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

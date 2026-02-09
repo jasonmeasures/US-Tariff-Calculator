@@ -1,0 +1,369 @@
+/* US Tariff Calculator - Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.header {
+    background: #1e3a5f;
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4fc3f7;
+}
+
+/* Dashboard Stats */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e3a5f;
+}
+
+.status-live .stat-value {
+    color: #10b981;
+}
+
+/* Cards */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.card h2 {
+    color: #1e3a5f;
+    margin-bottom: 25px;
+    font-size: 24px;
+}
+
+.card h3 {
+    color: #1e3a5f;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+/* Form */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-group input[type="range"] {
+    padding: 0;
+    cursor: pointer;
+}
+
+.range-value {
+    text-align: center;
+    font-weight: 600;
+    color: #667eea;
+    margin-top: 5px;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary {
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* Results */
+.results-card {
+    border-left: 4px solid #10b981;
+    background: #f0fdf4;
+}
+
+.result-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+.result-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.result-label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.result-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e3a5f;
+}
+
+.result-value.highlight {
+    color: #10b981;
+}
+
+/* Breakdown */
+.breakdown {
+    margin: 25px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.breakdown-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.breakdown-description {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.breakdown-amount {
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 16px;
+}
+
+/* Landed Cost */
+.landed-cost {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #1e3a5f;
+    color: white;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.landed-cost .result-label {
+    font-size: 18px;
+    color: white;
+}
+
+.landed-cost .result-value {
+    font-size: 32px;
+    color: #4fc3f7;
+}
+
+/* Confidence Badge */
+.confidence-badge {
+    display: inline-block;
+    background: #10b981;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-top: 15px;
+}
+
+.confidence-badge strong {
+    font-weight: 700;
+}
+
+/* Notes */
+#notes-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+}
+
+#notes-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+#notes-list li {
+    padding: 8px 0;
+    color: #92400e;
+}
+
+#notes-list li:before {
+    content: "⚠️ ";
+    margin-right: 8px;
+}
+
+/* Test Case Section */
+.test-case-section {
+    text-align: center;
+    margin: 30px 0;
+}
+
+/* Footer */
+.footer {
+    background: #1e3a5f;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
+}
+
+.footer p {
+    font-size: 14px;
+    color: #a0aec0;
+}
+
+/* Loading State */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .result-summary {
+        grid-template-columns: 1fr;
+    }
+}

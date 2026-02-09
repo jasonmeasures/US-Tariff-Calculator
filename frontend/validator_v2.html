@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7501 Entry Validator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+        }
+
+        h1 { font-size: 32px; margin-bottom: 10px; }
+        .subtitle { opacity: 0.9; font-size: 16px; }
+
+        .upload-section {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 60px 40px;
+            cursor: pointer;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+
+        .upload-box:hover { background: #f0f2ff; }
+
+        input[type="file"] { display: none; }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            padding: 40px;
+            display: none;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card.success { border-color: #4caf50; }
+        .card.warning { border-color: #ff9800; }
+        .card.error { border-color: #f44336; }
+
+        .card-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .card.success .card-value { color: #4caf50; }
+        .card.warning .card-value { color: #ff9800; }
+        .card.error .card-value { color: #f44336; }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover { border-color: #667eea; }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .entry-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .entry-card.has-variance { border-color: #f44336; }
+        .entry-card.minor-variance { border-color: #ff9800; }
+
+        .entry-header {
+            background: #f8f9ff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .entry-header:hover { background: #f0f2ff; }
+
+        .entry-body {
+            padding: 20px;
+            display: none;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .entry-body.expanded { display: block; }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-section {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .comparison-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .line-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .line-item .hts {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .line-item .amount {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+
+        .variance-box {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .variance-box.major {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        .variance-box h4 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+
+        .variance-box.major h4 { color: #f44336; }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-match { background: #e8f5e9; color: #4caf50; }
+        .status-minor { background: #fff3e0; color: #ff9800; }
+        .status-major { background: #ffebee; color: #f44336; }
+
+        .info-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 8px;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .explanation {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛃 7501 Entry Summary Validator</h1>
+            <p class="subtitle">Validate duties and see what was filed vs what should have been filed</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-box" id="uploadBox">
+                <div style="font-size: 48px; margin-bottom: 20px;">📂</div>
+                <h2>Drop your 7501 Excel file here</h2>
+                <p style="color: #666; margin: 10px 0;">or click to browse</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls">
+            </div>
+            <div id="fileName" style="margin-top: 20px; color: #667eea; font-weight: 600;"></div>
+            <button class="btn" id="validateBtn" disabled>Validate Entries</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">Validating entries...</p>
+        </div>
+
+        <div class="results-section" id="results">
+            <h2 style="margin-bottom: 20px;">Validation Results</h2>
+
+            <div class="summary-grid">
+                <div class="card success">
+                    <div style="color: #666; font-size: 14px;">Matches</div>
+                    <div class="card-value" id="matchCount">0</div>
+                </div>
+                <div class="card warning">
+                    <div style="color: #666; font-size: 14px;">Minor Variances</div>
+                    <div class="card-value" id="minorCount">0</div>
+                </div>
+                <div class="card error">
+                    <div style="color: #666; font-size: 14px;">Major Variances</div>
+                    <div class="card-value" id="majorCount">0</div>
+                </div>
+                <div class="card">
+                    <div style="color: #666; font-size: 14px;">Total Variance</div>
+                    <div class="card-value" id="totalVariance">$0.00</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All Entries (<span id="countAll">0</span>)</button>
+                <button class="filter-btn" data-filter="match">✅ Matches Only (<span id="countMatch">0</span>)</button>
+                <button class="filter-btn" data-filter="minor">⚠️ Minor Variances (<span id="countMinor">0</span>)</button>
+                <button class="filter-btn" data-filter="major">❌ Major Variances (<span id="countMajor">0</span>)</button>
+            </div>
+
+            <div id="entriesContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let allEntries = [];
+        let currentFilter = 'all';
+
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const validateBtn = document.getElementById('validateBtn');
+
+        uploadBox.onclick = () => fileInput.click();
+
+        fileInput.onchange = () => {
+            const file = fileInput.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = `Selected: ${file.name}`;
+                validateBtn.disabled = false;
+            }
+        };
+
+        validateBtn.onclick = async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://localhost:8000/api/validate-entry', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                allEntries = data.results;
+                displayResults(data);
+            } catch (error) {
+                alert('Error: ' + error.message);
+                document.getElementById('uploadSection').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+
+        function displayResults(data) {
+            // Calculate stats
+            let matches = 0, minor = 0, major = 0, totalVar = 0;
+
+            allEntries.forEach(r => {
+                if (r.error) return;
+                const v = Math.abs(r.variance || 0);
+                totalVar += v;
+
+                if (v < 1) matches++;
+                else if (r.variance_percent < 5) minor++;
+                else major++;
+            });
+
+            document.getElementById('matchCount').textContent = matches;
+            document.getElementById('minorCount').textContent = minor;
+            document.getElementById('majorCount').textContent = major;
+            document.getElementById('totalVariance').textContent = `$${totalVar.toFixed(2)}`;
+
+            document.getElementById('countAll').textContent = allEntries.length;
+            document.getElementById('countMatch').textContent = matches;
+            document.getElementById('countMinor').textContent = minor;
+            document.getElementById('countMajor').textContent = major;
+
+            renderEntries();
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function renderEntries() {
+            const container = document.getElementById('entriesContainer');
+            container.innerHTML = '';
+
+            // Group entries by item_number
+            const grouped = {};
+            allEntries.forEach(entry => {
+                if (entry.error) return;
+                const itemNum = entry.item_number || entry.line;
+                if (!grouped[itemNum]) grouped[itemNum] = [];
+                grouped[itemNum].push(entry);
+            });
+
+            // Sort by item number
+            const sortedItems = Object.keys(grouped).sort((a, b) => {
+                const numA = parseFloat(a) || 0;
+                const numB = parseFloat(b) || 0;
+                return numA - numB;
+            });
+
+            sortedItems.forEach(itemNum => {
+                const entries = grouped[itemNum];
+
+                // Calculate group totals and worst status
+                let totalVariance = 0;
+                let worstStatus = 'match';
+                entries.forEach(entry => {
+                    const v = Math.abs(entry.variance || 0);
+                    totalVariance += entry.variance || 0;
+
+                    const status = v < 1 ? 'match' : entry.variance_percent < 5 ? 'minor' : 'major';
+                    if (status === 'major') worstStatus = 'major';
+                    else if (status === 'minor' && worstStatus === 'match') worstStatus = 'minor';
+                });
+
+                // Apply filter at group level
+                if (currentFilter !== 'all' && worstStatus !== currentFilter) return;
+
+                // Separate base HTS and Chapter 99 entries
+                const baseEntries = entries.filter(e => !e.is_chapter99);
+                const chapter99Entries = entries.filter(e => e.is_chapter99);
+
+                const badge = worstStatus === 'match' ? '✅ MATCH' :
+                             worstStatus === 'minor' ? '⚠️ MINOR' : '❌ MAJOR';
+
+                const card = document.createElement('div');
+                card.className = `entry-card ${worstStatus === 'major' ? 'has-variance' : worstStatus === 'minor' ? 'minor-variance' : ''}`;
+
+                // Get description from base entry (or first entry if no base)
+                const mainEntry = baseEntries[0] || entries[0];
+                const description = mainEntry.description || '';
+
+                card.innerHTML = `
+                    <div class="entry-header" onclick="toggleEntry(this)">
+                        <div>
+                            <strong>Item #${itemNum}</strong> - ${entries.length} line${entries.length > 1 ? 's' : ''}
+                            ${description ? `<br><span style="font-size: 12px; color: #666;">${description}</span>` : ''}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-size: 14px; color: #666;">
+                                Total Variance: <strong style="color: ${totalVariance > 0 ? '#f44336' : '#4caf50'}">
+                                    ${totalVariance > 0 ? '+' : ''}$${totalVariance.toFixed(2)}
+                                </strong>
+                            </span>
+                            <span class="status-badge status-${worstStatus}">${badge}</span>
+                            <span style="font-size: 20px;">▼</span>
+                        </div>
+                    </div>
+                    <div class="entry-body">
+                        ${baseEntries.map(entry => generateGroupedEntryDetail(entry, 'Base HTS')).join('')}
+                        ${chapter99Entries.map(entry => generateGroupedEntryDetail(entry, 'Chapter 99 Derivative')).join('<div style="height: 20px;"></div>')}
+                        ${generateGroupSummary(entries, totalVariance)}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function generateGroupedEntryDetail(entry, typeLabel) {
+            const breakdown = entry.breakdown ? entry.breakdown.split(' | ') : [];
+            const v = Math.abs(entry.variance || 0);
+            const status = v < 1 ? 'match' : entry.variance_percent < 5 ? 'minor' : 'major';
+
+            let explanation = '';
+            if (status === 'major' || status === 'minor') {
+                explanation = generateExplanation(entry, breakdown);
+            }
+
+            return `
+                <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="color: #667eea; margin-bottom: 10px; font-size: 16px;">
+                        ${entry.is_chapter99 ? '📋' : '📦'} ${typeLabel} - Line ${entry.line}
+                    </h3>
+
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span class="info-label">HTS:</span>
+                            <span class="info-value">${entry.hts_code}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Country:</span>
+                            <span class="info-value">${entry.country}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Value:</span>
+                            <span class="info-value">$${entry.entered_value.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <div class="comparison-section">
+                            <h4>📄 WHAT WAS FILED</h4>
+                            <div class="line-item">
+                                <div class="hts">${entry.hts_code}</div>
+                                <div class="amount">
+                                    <span>Rate:</span>
+                                    <strong>${entry.declared_rate.toFixed(2)}%</strong>
+                                </div>
+                                <div class="amount">
+                                    <span>Duty:</span>
+                                    <strong>$${entry.declared_duty.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-section">
+                            <h4>✅ WHAT SHOULD BE FILED</h4>
+                            ${breakdown.map(b => {
+                                const match = b.match(/(.+): ([0-9.]+)% = \$([0-9.]+)/);
+                                if (!match) return '';
+                                const [, name, rate, amount] = match;
+                                if (parseFloat(amount) === 0 || name.includes('MPF') || name.includes('HMF')) return '';
+                                return `
+                                    <div class="line-item">
+                                        <div class="hts">${name}</div>
+                                        <div class="amount">
+                                            <span>Rate:</span>
+                                            <strong>${rate}%</strong>
+                                        </div>
+                                        <div class="amount">
+                                            <span>Duty:</span>
+                                            <strong>$${amount}</strong>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                            <div class="line-item" style="background: #f0f2ff;">
+                                <div class="amount">
+                                    <span><strong>Total Rate:</strong></span>
+                                    <strong>${entry.calculated_rate.toFixed(2)}%</strong>
+                                </div>
+                                <div class="amount">
+                                    <span><strong>Total Duty:</strong></span>
+                                    <strong>$${entry.calculated_duty.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-section">
+                            <h4>📊 VARIANCE ANALYSIS</h4>
+                            <div class="line-item" style="background: ${entry.variance > 0 ? '#ffebee' : '#e8f5e9'}">
+                                <div class="amount">
+                                    <span>Rate Difference:</span>
+                                    <strong>${(entry.calculated_rate - entry.declared_rate).toFixed(2)}%</strong>
+                                </div>
+                                <div class="amount">
+                                    <span>Duty Difference:</span>
+                                    <strong style="color: ${entry.variance > 0 ? '#f44336' : '#4caf50'}">
+                                        ${entry.variance > 0 ? '+' : ''}$${entry.variance.toFixed(2)}
+                                    </strong>
+                                </div>
+                                <div class="amount">
+                                    <span>Variance %:</span>
+                                    <strong>${entry.variance_percent.toFixed(1)}%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${explanation}
+                </div>
+            `;
+        }
+
+        function generateGroupSummary(entries, totalVariance) {
+            const totalDeclared = entries.reduce((sum, e) => sum + e.declared_duty, 0);
+            const totalCalculated = entries.reduce((sum, e) => sum + e.calculated_duty, 0);
+
+            return `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 18px;">📊 Item Summary</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div>
+                            <div style="opacity: 0.9; font-size: 14px;">Total Declared</div>
+                            <div style="font-size: 24px; font-weight: bold;">$${totalDeclared.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div style="opacity: 0.9; font-size: 14px;">Should Be</div>
+                            <div style="font-size: 24px; font-weight: bold;">$${totalCalculated.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div style="opacity: 0.9; font-size: 14px;">Total Variance</div>
+                            <div style="font-size: 24px; font-weight: bold;">
+                                ${totalVariance > 0 ? '+' : ''}$${totalVariance.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateEntryDetail(entry) {
+            const breakdown = entry.breakdown ? entry.breakdown.split(' | ') : [];
+            const v = Math.abs(entry.variance || 0);
+            const status = v < 1 ? 'match' : entry.variance_percent < 5 ? 'minor' : 'major';
+
+            let explanation = '';
+            if (status === 'major' || status === 'minor') {
+                explanation = generateExplanation(entry, breakdown);
+            }
+
+            return `
+                <div class="info-row">
+                    <div class="info-item">
+                        <span class="info-label">Entry Date:</span>
+                        <span class="info-value">${entry.entry_date}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Entered Value:</span>
+                        <span class="info-value">$${entry.entered_value.toFixed(2)}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Country:</span>
+                        <span class="info-value">${entry.country}</span>
+                    </div>
+                </div>
+
+                <div class="comparison-grid">
+                    <div class="comparison-section">
+                        <h4>📄 WHAT WAS FILED</h4>
+                        <div class="line-item">
+                            <div class="hts">${entry.hts_code}</div>
+                            <div class="amount">
+                                <span>Rate:</span>
+                                <strong>${entry.declared_rate.toFixed(2)}%</strong>
+                            </div>
+                            <div class="amount">
+                                <span>Duty:</span>
+                                <strong>$${entry.declared_duty.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-section">
+                        <h4>✅ WHAT SHOULD BE FILED</h4>
+                        ${breakdown.map(b => {
+                            const match = b.match(/(.+): ([0-9.]+)% = \$([0-9.]+)/);
+                            if (!match) return '';
+                            const [, name, rate, amount] = match;
+                            if (parseFloat(amount) === 0 || name.includes('MPF') || name.includes('HMF')) return '';
+                            return `
+                                <div class="line-item">
+                                    <div class="hts">${name}</div>
+                                    <div class="amount">
+                                        <span>Rate:</span>
+                                        <strong>${rate}%</strong>
+                                    </div>
+                                    <div class="amount">
+                                        <span>Duty:</span>
+                                        <strong>$${amount}</strong>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="line-item" style="background: #f0f2ff;">
+                            <div class="amount">
+                                <span><strong>Total Rate:</strong></span>
+                                <strong>${entry.calculated_rate.toFixed(2)}%</strong>
+                            </div>
+                            <div class="amount">
+                                <span><strong>Total Duty:</strong></span>
+                                <strong>$${entry.calculated_duty.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-section">
+                        <h4>📊 VARIANCE ANALYSIS</h4>
+                        <div class="line-item" style="background: ${entry.variance > 0 ? '#ffebee' : '#e8f5e9'}">
+                            <div class="amount">
+                                <span>Rate Difference:</span>
+                                <strong>${(entry.calculated_rate - entry.declared_rate).toFixed(2)}%</strong>
+                            </div>
+                            <div class="amount">
+                                <span>Duty Difference:</span>
+                                <strong style="color: ${entry.variance > 0 ? '#f44336' : '#4caf50'}">
+                                    ${entry.variance > 0 ? '+' : ''}$${entry.variance.toFixed(2)}
+                                </strong>
+                            </div>
+                            <div class="amount">
+                                <span>Variance %:</span>
+                                <strong>${entry.variance_percent.toFixed(1)}%</strong>
+                            </div>
+                        </div>
+                        ${entry.chapter99_codes ? `
+                            <div class="line-item">
+                                <div class="hts">Chapter 99 Codes</div>
+                                <div>${entry.chapter99_codes}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${explanation}
+            `;
+        }
+
+        function generateExplanation(entry, breakdown) {
+            const v = entry.variance;
+
+            // Check what's causing the variance
+            let reasons = [];
+            let materialWarnings = [];
+
+            breakdown.forEach(b => {
+                // Check for Section 232 material-based tariffs calculated at 0% due to missing material data
+                if (b.includes('Sec 232') && b.includes('× 0.0%')) {
+                    const materialMatch = b.match(/× 0\.0% (aluminum|steel|copper)/);
+                    if (materialMatch) {
+                        const material = materialMatch[1];
+                        const rateMatch = b.match(/([0-9.]+)%/);
+                        const rate = rateMatch ? rateMatch[1] : 'unknown';
+                        materialWarnings.push(`⚠️ Section 232 ${material.charAt(0).toUpperCase() + material.slice(1)} applies (rate: ${rate}%) but calculated at 0% because ${material} composition data is missing`);
+                    }
+                } else if (b.includes('Sec 232') && !b.includes('= $0.00')) {
+                    const match = b.match(/(.+): ([0-9.]+)% = \$([0-9.]+)/);
+                    if (match) {
+                        const [, name, rate, amount] = match;
+                        if (parseFloat(amount) > 0) {
+                            reasons.push(`Missing ${name} tariff (${rate}% = $${amount})`);
+                        }
+                    }
+                }
+
+                if (b.includes('IEEPA') && !b.includes('= $0.00')) {
+                    const match = b.match(/(.+): ([0-9.]+)% = \$([0-9.]+)/);
+                    if (match) {
+                        const [, name, rate, amount] = match;
+                        if (parseFloat(amount) > 0) {
+                            reasons.push(`Missing ${name} (${rate}% = $${amount})`);
+                        }
+                    }
+                }
+            });
+
+            if (reasons.length === 0 && v > 0) {
+                reasons.push('Rate discrepancy - declared rate does not match calculated rate');
+            }
+
+            if (v < 0) {
+                reasons = ['Overpayment - declared duty exceeds calculated amount'];
+            }
+
+            const severity = Math.abs(entry.variance_percent) >= 5 ? 'major' : '';
+
+            return `
+                <div class="variance-box ${severity}">
+                    <h4>${severity === 'major' ? '🚨' : '⚠️'} WHY THE DIFFERENCE?</h4>
+                    ${materialWarnings.length > 0 ? `
+                        <div class="explanation" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin-bottom: 10px;">
+                            <strong>📊 Material Composition Data Required:</strong><br>
+                            ${materialWarnings.map(w => `<div style="margin-top: 8px;">${w}</div>`).join('')}
+                            <div style="margin-top: 12px; font-size: 13px; color: #555;">
+                                <strong>Note:</strong> The validator cannot determine material percentages from filed duties.
+                                If your filing includes Section 232 charges, ensure material composition matches the country of smelt/pour certification.
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${reasons.map(r => `<div class="explanation">• ${r}</div>`).join('')}
+                    ${v > 0 ? `
+                        <div class="explanation" style="background: #fff3e0; margin-top: 10px;">
+                            <strong>Action Required:</strong> File Post Entry Amendment (PEA) or protest for additional $${v.toFixed(2)}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function toggleEntry(header) {
+            const body = header.nextElementSibling;
+            const arrow = header.querySelector('span:last-child');
+
+            if (body.classList.contains('expanded')) {
+                body.classList.remove('expanded');
+                arrow.textContent = '▼';
+            } else {
+                body.classList.add('expanded');
+                arrow.textContent = '▲';
+            }
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderEntries();
+            };
+        });
+    </script>
+</body>
+</html>

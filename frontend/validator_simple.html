@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>7501 Validator - Simple Test</title>
+</head>
+<body>
+    <h1>7501 Validator Test</h1>
+    <input type="file" id="fileInput" accept=".xlsx">
+    <button onclick="uploadFile()">Upload</button>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        async function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            document.getElementById('status').textContent = 'Uploading...';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                console.log('Sending request...');
+                const response = await fetch('http://localhost:8000/api/validate-entry', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('Response received:', response.status);
+                const data = await response.json();
+                console.log('Data parsed:', data);
+
+                document.getElementById('status').textContent = 'Success!';
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('status').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

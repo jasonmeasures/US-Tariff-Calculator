@@ -1,0 +1,28 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.so
+.eggs/
+*.egg-info/
+*.egg
+
+# Database (regenerated via database_setup.py)
+*.db
+
+# Logs and runtime
+logs/
+*.log
+*.pid
+api.log
+
+# OS and IDE
+.DS_Store
+.claude/settings.local.json
+
+# Optional generated outputs (uncomment if you don't want to track)
+# validation_report.xlsx
+# variance_detail.csv
+# variance_summary.csv
