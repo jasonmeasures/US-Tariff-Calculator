@@ -12,10 +12,14 @@ from io import BytesIO
 from dataclasses import asdict
 
 from tariff_engine import calculate_duty, CalculationResult, get_ieepa_rate
+from admin_api import admin_router
 import sqlite3
 import os
 
 app = FastAPI(title="US Tariff Calculator API", version="1.0.0")
+
+# Mount admin router
+app.include_router(admin_router)
 
 # Database path
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "us_tariff_calculator.db")

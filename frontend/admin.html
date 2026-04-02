@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | US Tariff Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:24px;">
+                <h1 style="margin:0;font-size:20px;">US Tariff Calculator</h1>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">Calculator</a>
+                    <a href="admin.html" class="nav-link active">Admin</a>
+                </nav>
+            </div>
+            <span class="brand">KlearNow</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container" style="padding-top:24px;">
+
+        <!-- Dashboard Stats -->
+        <div class="admin-dashboard" id="dashboard-stats">
+            <div class="admin-stat-card">
+                <div class="stat-number" id="stat-programs">-</div>
+                <div class="stat-label">Programs</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-number" id="stat-overlays">-</div>
+                <div class="stat-label">Active Overlays</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-number" id="stat-ieepa">-</div>
+                <div class="stat-label">IEEPA Entries</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-number" id="stat-countries">-</div>
+                <div class="stat-label">IEEPA Countries</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-number" id="stat-changes">-</div>
+                <div class="stat-label">Changes (7d)</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-number" id="stat-alerts">-</div>
+                <div class="stat-label">Pending Alerts</div>
+            </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="ieepa">IEEPA Rates</button>
+            <button class="tab-btn" data-tab="overlays">Overlays</button>
+            <button class="tab-btn" data-tab="programs">Programs</button>
+            <button class="tab-btn" data-tab="prompt">AI Prompt</button>
+            <button class="tab-btn" data-tab="audit">Audit Log</button>
+            <button class="tab-btn" data-tab="alerts">Alerts <span class="badge" id="alert-badge" style="display:none">0</span></button>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: IEEPA Rates -->
+        <!-- ============================================================ -->
+        <div class="tab-content active" id="tab-ieepa">
+            <div class="table-controls">
+                <select id="ieepa-country-filter">
+                    <option value="">All Countries</option>
+                </select>
+                <button class="btn-add" onclick="showAddIEEPAModal()">+ Add Rate</button>
+            </div>
+            <table class="data-table" id="ieepa-table">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Effective Date</th>
+                        <th>Rate %</th>
+                        <th>CSMS</th>
+                        <th>Chapter 99</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ieepa-tbody">
+                    <tr><td colspan="7" class="loading">Loading IEEPA rates</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: Overlays -->
+        <!-- ============================================================ -->
+        <div class="tab-content" id="tab-overlays">
+            <div class="table-controls">
+                <select id="overlay-program-filter">
+                    <option value="">All Programs</option>
+                </select>
+                <input type="text" id="overlay-hts-search" placeholder="Search HTS code...">
+                <select id="overlay-jurisdiction-filter">
+                    <option value="">All Jurisdictions</option>
+                    <option value="GLOBAL">GLOBAL</option>
+                    <option value="CN">China (CN)</option>
+                    <option value="BR">Brazil (BR)</option>
+                    <option value="KR">Korea (KR)</option>
+                    <option value="CH">Switzerland (CH)</option>
+                </select>
+                <button class="btn-add" onclick="showAddOverlayModal()">+ Add Overlay</button>
+            </div>
+            <table class="data-table" id="overlay-table">
+                <thead>
+                    <tr>
+                        <th>HTS Code</th>
+                        <th>Program</th>
+                        <th>Rate %</th>
+                        <th>Jurisdiction</th>
+                        <th>Effective Date</th>
+                        <th>Ch99</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="overlay-tbody">
+                    <tr><td colspan="7" class="loading">Loading overlays</td></tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="overlay-pagination"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: Programs -->
+        <!-- ============================================================ -->
+        <div class="tab-content" id="tab-programs">
+            <div class="dashboard" id="programs-grid">
+                <div class="loading">Loading programs</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: AI Prompt -->
+        <!-- ============================================================ -->
+        <div class="tab-content" id="tab-prompt">
+            <div class="prompt-section">
+                <h3 style="margin-top:0;color:#1e3a5f;">Describe your rule change</h3>
+                <textarea id="rule-prompt" placeholder="e.g., Set China IEEPA to 35% starting March 1, 2025 per CSMS 67200000"></textarea>
+                <div class="prompt-examples">
+                    <strong>Examples:</strong>
+                    <code>"Set China IEEPA to 35% starting March 1, 2025"</code>
+                    <code>"Suspend Brazil reciprocal tariff effective immediately"</code>
+                    <code>"Add Section 232 Steel at 25% for HTS 7318.22.00"</code>
+                    <code>"Increase India IEEPA to 30% on April 15 per CSMS 67200000"</code>
+                </div>
+                <div style="margin-top:16px;">
+                    <button class="btn-primary-admin" id="parse-btn" onclick="parseRulePrompt()">Parse Changes</button>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="preview-panel" id="preview-panel">
+                <div class="preview-header">
+                    <h4>Preview Changes</h4>
+                    <span class="confidence-badge" id="preview-confidence"></span>
+                </div>
+                <div class="preview-changes" id="preview-changes"></div>
+                <div class="preview-warnings" id="preview-warnings"></div>
+                <div class="preview-actions">
+                    <button class="btn-sm btn-cancel" onclick="cancelPreview()">Cancel</button>
+                    <button class="btn-primary-admin" onclick="applyRuleChanges()">Confirm & Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: Audit Log -->
+        <!-- ============================================================ -->
+        <div class="tab-content" id="tab-audit">
+            <div class="table-controls">
+                <select id="audit-table-filter">
+                    <option value="">All Tables</option>
+                    <option value="ieepa_country_rates">IEEPA Rates</option>
+                    <option value="hts_overlay_mappings">Overlays</option>
+                    <option value="ieepa_annex_exceptions">Annex Exceptions</option>
+                </select>
+                <select id="audit-source-filter">
+                    <option value="">All Sources</option>
+                    <option value="manual">Manual</option>
+                    <option value="ai_prompt">AI Prompt</option>
+                    <option value="monitor">Monitor</option>
+                </select>
+            </div>
+            <table class="data-table" id="audit-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Table</th>
+                        <th>Description</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-tbody">
+                    <tr><td colspan="5" class="empty-state">No audit entries yet</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB: Alerts -->
+        <!-- ============================================================ -->
+        <div class="tab-content" id="tab-alerts">
+            <div class="table-controls">
+                <select id="alert-status-filter">
+                    <option value="">All Status</option>
+                    <option value="new">New</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="applied">Applied</option>
+                    <option value="dismissed">Dismissed</option>
+                </select>
+                <button class="btn-add" onclick="triggerMonitorCheck()">Check Now</button>
+            </div>
+            <table class="data-table" id="alert-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Source</th>
+                        <th>Reference</th>
+                        <th>Title</th>
+                        <th>Relevance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="alert-tbody">
+                    <tr><td colspan="7" class="empty-state">No alerts yet. Click "Check Now" to scan for new CSMS/FR notices.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- Add IEEPA Rate Modal -->
+    <div class="modal-overlay" id="modal-add-ieepa">
+        <div class="modal">
+            <h3>Add IEEPA Rate</h3>
+            <div class="form-group">
+                <label>Country Code</label>
+                <input type="text" id="new-ieepa-country" placeholder="e.g., CN, JP, IN" maxlength="6">
+            </div>
+            <div class="form-group">
+                <label>Effective Date</label>
+                <input type="date" id="new-ieepa-date">
+            </div>
+            <div class="form-group">
+                <label>Rate (%)</label>
+                <input type="number" id="new-ieepa-rate" step="0.1" placeholder="e.g., 25.0">
+            </div>
+            <div class="form-group">
+                <label>CSMS Reference</label>
+                <input type="text" id="new-ieepa-csms" placeholder="e.g., 67200000">
+            </div>
+            <div class="form-group">
+                <label>Chapter 99 Code</label>
+                <input type="text" id="new-ieepa-ch99" placeholder="e.g., 99030101">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="new-ieepa-notes" placeholder="Optional notes"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-sm btn-cancel" onclick="closeModal('modal-add-ieepa')">Cancel</button>
+                <button class="btn-primary-admin" onclick="submitNewIEEPA()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Overlay Modal -->
+    <div class="modal-overlay" id="modal-add-overlay">
+        <div class="modal">
+            <h3>Add Overlay Mapping</h3>
+            <div class="form-group">
+                <label>HTS Code</label>
+                <input type="text" id="new-overlay-hts" placeholder="e.g., 7318.22.00.00">
+            </div>
+            <div class="form-group">
+                <label>Program</label>
+                <select id="new-overlay-program">
+                    <option value="">Select Program</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Duty Rate (%)</label>
+                <input type="number" id="new-overlay-rate" step="0.1" placeholder="e.g., 25.0">
+            </div>
+            <div class="form-group">
+                <label>Jurisdiction</label>
+                <input type="text" id="new-overlay-jurisdiction" value="GLOBAL" placeholder="GLOBAL, CN, etc.">
+            </div>
+            <div class="form-group">
+                <label>Effective Date</label>
+                <input type="date" id="new-overlay-date">
+            </div>
+            <div class="form-group">
+                <label>Chapter 99 Code</label>
+                <input type="text" id="new-overlay-ch99" placeholder="e.g., 99038508">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-sm btn-cancel" onclick="closeModal('modal-add-overlay')">Cancel</button>
+                <button class="btn-primary-admin" onclick="submitNewOverlay()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>US Tariff Calculator Admin v1.0 | Data Management Console | Built by KlearNow</p>
+    </footer>
+
+    <script src="admin.js"></script>
+</body>
+</html>

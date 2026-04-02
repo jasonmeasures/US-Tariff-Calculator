@@ -12,15 +12,115 @@ from pathlib import Path
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "us_tariff_calculator.db")
 
-# Load IEEPA rates module
-try:
-    from ieepa_rates import get_ieepa_rate, load_annex_ii_exceptions
-    # Initialize Annex II exceptions on module load
-    excel_path = Path(__file__).parent.parent / "data" / "Trump_Tariffs_Summary_20260122.xlsx"
-    if excel_path.exists():
-        load_annex_ii_exceptions(str(excel_path))
-except ImportError:
-    get_ieepa_rate = None
+# Load IEEPA rates - prefer DB-backed, fallback to hardcoded
+def get_ieepa_rate_from_db(country: str, entry_date: str, hts_code: str) -> Optional[Dict]:
+    """
+    Database-backed IEEPA rate lookup.
+    Reads from ieepa_country_rates and ieepa_annex_exceptions tables.
+    Returns dict with rate, chapter99_code, csms, notes, or None if not applicable.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    # Normalize HTS code
+    hts_normalized = hts_code.replace('.', '').replace('-', '').replace(' ', '').strip()
+
+    # Check Annex II HTS exemption
+    cursor.execute("""
+        SELECT 1 FROM ieepa_annex_exceptions
+        WHERE exception_type = 'HTS' AND value = ? AND is_active = 1
+    """, (hts_normalized,))
+    if cursor.fetchone():
+        conn.close()
+        return None
+
+    # Also check 8-digit prefix
+    if len(hts_normalized) >= 8:
+        cursor.execute("""
+            SELECT 1 FROM ieepa_annex_exceptions
+            WHERE exception_type = 'HTS' AND value = ? AND is_active = 1
+        """, (hts_normalized[:8],))
+        if cursor.fetchone():
+            conn.close()
+            return None
+
+    # Check Annex II COO exemption
+    cursor.execute("""
+        SELECT 1 FROM ieepa_annex_exceptions
+        WHERE exception_type = 'COO' AND value = ? AND is_active = 1
+    """, (country.upper(),))
+    if cursor.fetchone():
+        conn.close()
+        return None
+
+    # Parse entry date
+    try:
+        entry_date_clean = str(entry_date).split(' ')[0]
+    except:
+        conn.close()
+        return None
+
+    # Try country-specific rate first
+    cursor.execute("""
+        SELECT rate, csms_reference, chapter99_code, effective_date, notes
+        FROM ieepa_country_rates
+        WHERE country_code = ? AND effective_date <= ? AND is_active = 1
+        ORDER BY effective_date DESC
+        LIMIT 1
+    """, (country.upper(), entry_date_clean))
+
+    result = cursor.fetchone()
+
+    if not result:
+        # Fallback to GLOBAL
+        cursor.execute("""
+            SELECT rate, csms_reference, chapter99_code, effective_date, notes
+            FROM ieepa_country_rates
+            WHERE country_code = 'GLOBAL' AND effective_date <= ? AND is_active = 1
+            ORDER BY effective_date DESC
+            LIMIT 1
+        """, (entry_date_clean,))
+        result = cursor.fetchone()
+
+    conn.close()
+
+    if not result or result[0] == 0:
+        return None
+
+    return {
+        'rate': result[0],
+        'csms': result[1],
+        'chapter99_code': result[2],
+        'implementation_date': result[3],
+        'notes': result[4] or f'IEEPA Reciprocal - CSMS {result[1]}'
+    }
+
+
+def _init_ieepa():
+    """Initialize IEEPA rate function - prefer DB, fallback to hardcoded"""
+    # Check if DB has IEEPA rates
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM ieepa_country_rates WHERE is_active = 1")
+        count = cursor.fetchone()[0]
+        conn.close()
+        if count > 0:
+            return get_ieepa_rate_from_db
+    except:
+        pass
+
+    # Fallback to hardcoded module
+    try:
+        from ieepa_rates import get_ieepa_rate as _hardcoded_ieepa, load_annex_ii_exceptions
+        excel_path = Path(__file__).parent.parent / "data" / "Trump_Tariffs_Summary_20260122.xlsx"
+        if excel_path.exists():
+            load_annex_ii_exceptions(str(excel_path))
+        return _hardcoded_ieepa
+    except ImportError:
+        return None
+
+get_ieepa_rate = _init_ieepa()
 
 
 @dataclass
@@ -143,6 +243,7 @@ def get_applicable_overlays(
         FROM hts_overlay_mappings m
         WHERE m.hts_code = ?
         AND (m.jurisdiction = ? OR m.jurisdiction = 'GLOBAL')
+        AND m.is_active = 1
     """, (hts_code, country.upper()))
 
     for row in cursor.fetchall():
@@ -170,6 +271,7 @@ def get_applicable_overlays(
             FROM hts_overlay_mappings m
             WHERE m.hts_code = ?
             AND (m.jurisdiction = ? OR m.jurisdiction = 'GLOBAL')
+            AND m.is_active = 1
         """, (hts_8digit, country.upper()))
 
         for row in cursor.fetchall():
